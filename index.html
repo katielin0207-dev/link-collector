@@ -326,8 +326,8 @@
   </div>
 
   <div class="card">
-    <span class="field-label">备注（可选）</span>
-    <input type="text" id="note-input" placeholder="简单描述一下内容..." />
+    <span class="field-label">标题（可选）</span>
+    <input type="text" id="note-input" placeholder="给这个链接起个名字，不填就用 URL..." />
   </div>
 
   <button class="save-btn" id="save-btn" onclick="saveToNotion()">存入 Notion</button>
@@ -465,15 +465,13 @@ async function saveToNotion() {
   showStatus('save-status', 'loading', '正在存入 Notion...');
 
   const source = detectSource(url);
-  const titleText = note || url;
 
   const props = {
-    "标题": { title: [{ text: { content: titleText } }] },
+    "标题": { title: [{ text: { content: note || url } }] },
     "链接": { url: url },
     "分类": { select: { name: selectedCat } },
     "来源": { select: { name: source } }
   };
-  if (note) props["备注"] = { rich_text: [{ text: { content: note } }] };
 
   try {
     const resp = await fetch(config.workerUrl, {
@@ -484,7 +482,7 @@ async function saveToNotion() {
     const data = await resp.json();
     if (resp.ok) {
       showStatus('save-status', 'success', '✓ 已存入 Notion！');
-      saveLocal({ url, cat: selectedCat, note, source, time: new Date().toISOString() });
+      saveLocal({ url, cat: selectedCat, source, time: new Date().toISOString() });
       document.getElementById('url-input').value = '';
       document.getElementById('note-input').value = '';
       selectedCat = '';
