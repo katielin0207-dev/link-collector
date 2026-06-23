@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="群收藏">
+<title>群链接收藏夹</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #ebebea;
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #a0a09c;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --blue-bg: #e6f1fb;
+    --blue-text: #0c447c;
+    --green-bg: #eaf3de;
+    --green-text: #3b6d11;
+    --red-bg: #fcebeb;
+    --red-text: #a32d2d;
+    --radius: 10px;
+    --radius-sm: 7px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #252523;
+      --bg3: #2e2e2b;
+      --text: #f0efe8;
+      --text2: #a0a09a;
+      --text3: #6b6b65;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+      --blue-bg: #042c53;
+      --blue-text: #b5d4f4;
+      --green-bg: #173404;
+      --green-text: #c0dd97;
+      --red-bg: #501313;
+      --red-text: #f7c1c1;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .top-bar {
+    padding: 16px 20px 0;
+    padding-top: calc(16px + env(safe-area-inset-top));
+  }
+  .app-title {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .app-sub {
+    font-size: 14px;
+    color: var(--text2);
+    margin-top: 3px;
+  }
+  .tab-row {
+    display: flex;
+    gap: 0;
+    margin: 16px 20px 0;
+    background: var(--bg2);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+  }
+  .tab {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: var(--bg);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .panel { padding: 16px 20px; display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--bg2);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .field-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  input[type="text"], input[type="url"], input[type="password"] {
+    width: 100%;
+    padding: 11px 13px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    -webkit-appearance: none;
+    font-family: inherit;
+  }
+  input:focus {
+    border-color: #378add;
+    box-shadow: 0 0 0 3px rgba(55,138,221,0.12);
+  }
+  input::placeholder { color: var(--text3); }
+
+  .url-row { display: flex; gap: 8px; }
+  .paste-btn {
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--bg);
+    color: var(--text2);
+    font-size: 18px;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+  }
+  .paste-btn:active { opacity: 0.7; }
+
+  .cat-row { display: flex; gap: 8px; }
+  .cat-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text2);
+    font-size: 15px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .cat-btn.selected {
+    border-color: #378add;
+    background: var(--blue-bg);
+    color: var(--blue-text);
+    font-weight: 500;
+  }
+  .save-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: none;
+    background: #1a1a18;
+    color: #f0efe8;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  @media (prefers-color-scheme: dark) {
+    .save-btn { background: #f0efe8; color: #1a1a18; }
+  }
+  .save-btn:active { opacity: 0.8; }
+  .save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .status-msg {
+    margin-top: 10px;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    display: none;
+  }
+  .status-msg.success { background: var(--green-bg); color: var(--green-text); display: block; }
+  .status-msg.error { background: var(--red-bg); color: var(--red-text); display: block; }
+  .status-msg.loading { background: var(--bg2); color: var(--text2); display: block; }
+
+  .setup-toggle {
+    font-size: 13px;
+    color: var(--text2);
+    text-align: center;
+    padding: 8px 0 4px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .setup-box { display: none; }
+  .setup-box.open { display: block; }
+
+  .list-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .list-item:last-child { border-bottom: none; }
+  .tag {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+    margin-top: 1px;
+  }
+  .tag.learn { background: var(--blue-bg); color: var(--blue-text); }
+  .tag.tips { background: var(--green-bg); color: var(--green-text); }
+  .item-title {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.4;
+    word-break: break-all;
+  }
+  .item-title a { color: #378add; text-decoration: none; }
+  .item-meta {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 3px;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--text3);
+    font-size: 15px;
+  }
+  .share-box {
+    background: var(--bg2);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .share-url {
+    flex: 1;
+    font-size: 12px;
+    color: var(--text2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .copy-btn {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .section-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  .spacer { height: 12px; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="app-title">群收藏 🔖</div>
+  <div class="app-sub">微信群好链接，一键存入 Notion</div>
+</div>
+
+<div class="tab-row">
+  <button class="tab active" onclick="switchTab('add')" id="tab-add">添加链接</button>
+  <button class="tab" onclick="switchTab('list')" id="tab-list">最近收藏</button>
+  <button class="tab" onclick="switchTab('settings')" id="tab-settings">设置</button>
+</div>
+
+<div class="panel active" id="panel-add">
+  <div class="card">
+    <span class="field-label">链接</span>
+    <div class="url-row">
+      <input type="url" id="url-input" placeholder="粘贴链接..." />
+      <button class="paste-btn" onclick="pasteUrl()" title="粘贴">📋</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="field-label">分类</span>
+    <div class="cat-row">
+      <button class="cat-btn" id="cat-learn" onclick="selectCat('系统学习')">📚 系统学习</button>
+      <button class="cat-btn" id="cat-tips" onclick="selectCat('Tips')">💡 Tips</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="field-label">备注（可选）</span>
+    <input type="text" id="note-input" placeholder="简单描述一下内容..." />
+  </div>
+
+  <button class="save-btn" id="save-btn" onclick="saveToNotion()">存入 Notion</button>
+  <div class="status-msg" id="save-status"></div>
+</div>
+
+<div class="panel" id="panel-list">
+  <div class="section-label">最近 20 条</div>
+  <div id="list-container">
+    <div class="empty-state">还没有收藏～</div>
+  </div>
+  <div id="share-area" style="display:none;">
+    <div class="spacer"></div>
+    <div class="section-label">分享给群友</div>
+    <div class="share-box">
+      <span class="share-url" id="share-url-display"></span>
+      <button class="copy-btn" onclick="copyShareLink()">复制链接</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-settings">
+  <div class="card">
+    <span class="field-label">Notion API Token</span>
+    <input type="password" id="s-token" placeholder="ntn_..." />
+  </div>
+  <div class="card">
+    <span class="field-label">Database ID</span>
+    <input type="text" id="s-dbid" placeholder="388cdf84d05680f5810ccd627f7d676a" />
+    <div style="font-size:12px;color:var(--text3);margin-top:8px;">从 Notion 数据库 URL 里复制那串字母数字</div>
+  </div>
+  <button class="save-btn" onclick="saveSettings()">保存设置</button>
+  <div class="status-msg" id="settings-status"></div>
+
+  <div style="margin-top:20px;padding:14px 16px;background:var(--bg2);border-radius:var(--radius);">
+    <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px;">Notion 数据库需要的字段</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8;">
+      标题 → Title<br>
+      链接 → URL<br>
+      分类 → Select<br>
+      来源 → Select<br>
+      备注 → Text
+    </div>
+  </div>
+</div>
+
+<script>
+let selectedCat = '';
+let config = { token: '', dbId: '' };
+
+function loadConfig() {
+  try {
+    const s = localStorage.getItem('notion_cfg');
+    if (s) {
+      config = JSON.parse(s);
+      if (config.token) document.getElementById('s-token').value = config.token;
+      if (config.dbId) document.getElementById('s-dbid').value = config.dbId;
+    }
+  } catch(e) {}
+}
+
+function saveSettings() {
+  const token = document.getElementById('s-token').value.trim();
+  const dbId = document.getElementById('s-dbid').value.trim().replace(/-/g,'').replace(/^.*\//,'').split('?')[0];
+  if (!token || !dbId) {
+    showStatus('settings-status', 'error', '请填写 Token 和 Database ID');
+    return;
+  }
+  config = { token, dbId };
+  localStorage.setItem('notion_cfg', JSON.stringify(config));
+  showStatus('settings-status', 'success', '设置已保存 ✓');
+}
+
+function selectCat(cat) {
+  selectedCat = cat;
+  document.getElementById('cat-learn').classList.toggle('selected', cat === '系统学习');
+  document.getElementById('cat-tips').classList.toggle('selected', cat === 'Tips');
+}
+
+async function pasteUrl() {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('url-input').value = text;
+  } catch(e) {
+    document.getElementById('url-input').focus();
+    document.getElementById('url-input').select();
+  }
+}
+
+function detectSource(url) {
+  if (!url) return '其他';
+  if (url.includes('xiaohongshu') || url.includes('xhslink') || url.includes('xhs.link')) return '小红书';
+  if (url.includes('youtube') || url.includes('youtu.be')) return 'YouTube';
+  if (url.includes('bilibili') || url.includes('b23.tv')) return 'B站';
+  if (url.includes('douyin') || url.includes('tiktok')) return '抖音';
+  if (url.includes('mp.weixin.qq')) return '微信公众号';
+  if (url.includes('zhihu')) return '知乎';
+  if (url.includes('weibo')) return '微博';
+  try { return new URL(url).hostname.replace('www.',''); } catch(e) { return '其他'; }
+}
+
+async function saveToNotion() {
+  const url = document.getElementById('url-input').value.trim();
+  const note = document.getElementById('note-input').value.trim();
+
+  if (!url) { showStatus('save-status', 'error', '请先填入链接'); return; }
+  if (!selectedCat) { showStatus('save-status', 'error', '请选择分类'); return; }
+  if (!config.token || !config.dbId) {
+    showStatus('save-status', 'error', '请先在「设置」里填写 Notion Token 和 Database ID');
+    switchTab('settings');
+    return;
+  }
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  showStatus('save-status', 'loading', '正在存入 Notion...');
+
+  const source = detectSource(url);
+  const titleText = note || url;
+
+  const props = {
+    "标题": { title: [{ text: { content: titleText } }] },
+    "链接": { url: url },
+    "分类": { select: { name: selectedCat } },
+    "来源": { select: { name: source } }
+  };
+  if (note) props["备注"] = { rich_text: [{ text: { content: note } }] };
+
+  try {
+    const resp = await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + config.token,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ parent: { database_id: config.dbId }, properties: props })
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      showStatus('save-status', 'success', '✓ 已存入 Notion！');
+      saveLocal({ url, cat: selectedCat, note, source, time: new Date().toISOString() });
+      document.getElementById('url-input').value = '';
+      document.getElementById('note-input').value = '';
+      selectedCat = '';
+      document.getElementById('cat-learn').classList.remove('selected');
+      document.getElementById('cat-tips').classList.remove('selected');
+    } else {
+      showStatus('save-status', 'error', '出错：' + (data.message || resp.status));
+    }
+  } catch(e) {
+    showStatus('save-status', 'error', '网络错误，请检查网络连接');
+  }
+  btn.disabled = false;
+}
+
+function saveLocal(item) {
+  try {
+    let list = JSON.parse(localStorage.getItem('notion_links') || '[]');
+    list.unshift(item);
+    if (list.length > 20) list = list.slice(0, 20);
+    localStorage.setItem('notion_links', JSON.stringify(list));
+  } catch(e) {}
+}
+
+function renderList() {
+  const list = JSON.parse(localStorage.getItem('notion_links') || '[]');
+  const container = document.getElementById('list-container');
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-state">还没有收藏，去添加第一条吧～</div>';
+    return;
+  }
+  let html = '';
+  list.forEach(item => {
+    const tagClass = item.cat === 'Tips' ? 'tag tips' : 'tag learn';
+    const label = item.cat || '未分类';
+    const display = item.note || item.url;
+    const timeStr = item.time ? new Date(item.time).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }) : '';
+    html += `<div class="list-item">
+      <span class="${tagClass}">${label}</span>
+      <div style="flex:1;min-width:0;">
+        <div class="item-title"><a href="${item.url}" target="_blank">${escHtml(display)}</a></div>
+        <div class="item-meta">${escHtml(item.source || '')}${timeStr ? ' · ' + timeStr : ''}</div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+
+  if (config.dbId) {
+    const shareUrl = `https://www.notion.so/${config.dbId}`;
+    document.getElementById('share-url-display').textContent = shareUrl;
+    document.getElementById('share-area').style.display = 'block';
+  }
+}
+
+function copyShareLink() {
+  const url = document.getElementById('share-url-display').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '已复制！';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function switchTab(tab) {
+  ['add','list','settings'].forEach(t => {
+    document.getElementById('panel-' + t).classList.toggle('active', t === tab);
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'list') renderList();
+}
+
+function showStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = 'status-msg ' + type;
+  el.textContent = msg;
+  if (type === 'success') setTimeout(() => el.style.display = 'none', 3000);
+}
+
+loadConfig();
+if (!document.getElementById('s-dbid').value) {
+  document.getElementById('s-dbid').value = '388cdf84d05680f5810ccd627f7d676a';
+}
+</script>
+</body>
+</html>
