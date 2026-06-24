@@ -476,11 +476,15 @@ async function saveToNotion() {
   };
 
   try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
     const resp = await fetch(config.workerUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token: config.token, dbId: config.dbId, props })
+      body: JSON.stringify({ token: config.token, dbId: config.dbId, props }),
+      signal: controller.signal
     });
+    clearTimeout(timer);
     const data = await resp.json();
     if (resp.ok) {
       showStatus('save-status', 'success', '✓ 已存入 Notion！');
@@ -494,7 +498,11 @@ async function saveToNotion() {
       showStatus('save-status', 'error', '出错：' + (data.message || data.error || resp.status));
     }
   } catch(e) {
-    showStatus('save-status', 'error', '请求失败，请检查 Worker URL 是否正确');
+    if (e.name === 'AbortError') {
+      showStatus('save-status', 'error', '请求超时（10秒），请检查网络或 Worker URL');
+    } else {
+      showStatus('save-status', 'error', '请求失败，请检查 Worker URL 是否正确');
+    }
   }
   btn.disabled = false;
 }
