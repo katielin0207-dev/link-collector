@@ -322,6 +322,7 @@
     <div class="cat-row">
       <button class="cat-btn" id="cat-learn" onclick="selectCat('系统学习')">📚 系统学习</button>
       <button class="cat-btn" id="cat-tips" onclick="selectCat('Tips')">💡 Tips</button>
+      <button class="cat-btn" id="cat-tool" onclick="selectCat('工具')">🔧 工具</button>
     </div>
   </div>
 
@@ -423,6 +424,7 @@ function selectCat(cat) {
   selectedCat = cat;
   document.getElementById('cat-learn').classList.toggle('selected', cat === '系统学习');
   document.getElementById('cat-tips').classList.toggle('selected', cat === 'Tips');
+  document.getElementById('cat-tool').classList.toggle('selected', cat === '工具');
 }
 
 async function pasteUrl() {
